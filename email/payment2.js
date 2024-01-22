@@ -35,7 +35,7 @@ transporter.use('compile', hbs(handlebarOptions));
 
 
 
-const sendConfirmationEmail = (recipientEmail) => {
+const sendPaymentEmail2 = (recipientEmail, teamName) => {
   
   const senderName = 'Aantarya 2k24'
   const senderEmail = '<noreply@aantarya.tech>'
@@ -47,7 +47,9 @@ const sendConfirmationEmail = (recipientEmail) => {
     to: recipientEmail,
     subject: 'Payment Verified- Aantarya 2k24',
     template: 'payment2',
-  
+    context: {
+      team_name: teamName,
+    }
   };
 
 
@@ -61,6 +63,6 @@ const sendConfirmationEmail = (recipientEmail) => {
 };
 
 
-// sendConfirmationEmail('muhammedafnan8184@gmail.com')
+// sendPaymentEmail2('muhammedafnan8184@gmail.com')
 
-module.exports = { sendConfirmationEmail };
+module.exports = { sendPaymentEmail2 };

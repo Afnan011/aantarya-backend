@@ -1,6 +1,7 @@
 const Team = require("../model/team");
 const puppeteer = require("puppeteer");
 const { PDFDocument } = require("pdf-lib");
+const {sendPaymentEmail2} = require('../email/payment2')
 
 const adminRoute = async (req, res) => {
   res.status(200).json({ message: "Admin Route" });
@@ -979,6 +980,42 @@ function generateHtmlForDance(data) {
 }
 
 
+const updateTeamStatus = async(req, res) => {
+  try {
+    const teamId = req.params.teamId;
+    const status = req.body.paymentStatus.verificationStatus;
+    const team = await Team.findById(teamId);
+
+    const updateTeam = await Team.updateOne(
+      {_id: teamId},
+      { $set: { "paymentStatus.verificationStatus": status } }
+      );
+
+    if (!team) {
+      return res
+        .status(404)
+        .json({ message: `cannot find Team with the ID ${teamId}` });
+    }
+
+
+    if(team.paymentStatus.verificationStatus) {
+      return res.status(400).json({ message: "Payment already verified" });
+    }
+
+    const email = team.email;
+    const teamName = team.teamName;
+    sendPaymentEmail2(email, teamName);
+
+    const updatedTeam = await Team.findById(teamId);
+    res.json(updatedTeam.paymentStatus);
+
+  } catch (err) {
+    console.log("ERROR: " + err);
+    res.status(500).json({ message: err.message });
+  }
+}
+
+
 module.exports = { 
   adminRoute, 
   getAllTeams, 
@@ -993,5 +1030,6 @@ module.exports = {
   getDebateMems,
   getDanceMems,
   getGamingMems,
-  getTreasureMems
+  getTreasureMems,
+  updateTeamStatus
 };

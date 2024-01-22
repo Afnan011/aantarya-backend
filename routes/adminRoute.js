@@ -13,7 +13,8 @@ const {adminRoute,
     getDebateMems,
     getDanceMems,
     getGamingMems,
-    getTreasureMems
+    getTreasureMems,
+    updateTeamStatus
 } = require('../controller/adminController')
 
 
@@ -45,6 +46,9 @@ router.get('/get-gaming-mems', getGamingMems)
 router.get('/get-treasure-mems', getTreasureMems)
 
 router.get('/get-dance-mems', getDanceMems)
+
+router.put('/update-team-status/:teamId', updateTeamStatus);
+
 
 module.exports = router;
 
