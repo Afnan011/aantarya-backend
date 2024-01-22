@@ -73,13 +73,10 @@ const getCodingMems = async (req, res) => {
 
   try {
     const browser = await puppeteer.launch({
-      args: [
-        "--disable-setuid-sandbox",
-        "--no-sandbox",
-        "--single-process",
-        "--no-zygote",
-      ],
       headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
       executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
     });
 
@@ -87,18 +84,19 @@ const getCodingMems = async (req, res) => {
 
     const ugPage = await browser.newPage();
     const ugHtml = generateHtml(codingDataUG, "UG", "Coding");
+    await ugPage.setDefaultNavigationTimeout(0);
     await ugPage.setContent(ugHtml);
     const ugPdfBuffer = await ugPage.pdf({ format: "A4" });
 
     // PG Data
     const pgPage = await browser.newPage();
     const pgHtml = generateHtml(codingDataPG, "PG", "Coding");
+    await pgPage.setDefaultNavigationTimeout(0);
     await pgPage.setContent(pgHtml);
     const pgPdfBuffer = await pgPage.pdf({ format: "A4" });
 
-    // Close the browser
-    await browser.close();
-
+    
+    
     // Combine the two pdfs
     // Load PDF documents
     const ugPdfDoc = await PDFDocument.load(ugPdfBuffer);
@@ -122,9 +120,14 @@ const getCodingMems = async (req, res) => {
     res.write(combinedPdfBuffer);
     res.end();
 
+    // Close the browser
+    await browser.close();
+
   } catch (error) {
     console.error(error);
     res.status(500).send("Error generating PDF");
+  }
+  finally{
   }
 };
 
