@@ -724,7 +724,7 @@ const getTreasureMems = async (req, res) => {
     const pdfBuffer = await page.pdf({ format: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition","inline; filename=gaming-participants.pdf");
+    res.setHeader("Content-Disposition","inline; filename=tressure-hunt-participants.pdf");
     res.write(pdfBuffer);
     res.end();
 

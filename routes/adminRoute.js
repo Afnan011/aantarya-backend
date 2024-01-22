@@ -64,3 +64,20 @@ module.exports = router;
 // gaming: [combined], 2
 // treasure: [combined], 2
 // dance: [combined], 5
+
+// test routes
+/*
+https://mca-fest-v1.onrender.com/admin/get-coding-mems
+https://mca-fest-v1.onrender.com/admin/get-web-mems
+https://mca-fest-v1.onrender.com/admin/get-itmanger-mems
+https://mca-fest-v1.onrender.com/admin/get-designing-mems
+https://mca-fest-v1.onrender.com/admin/get-dumbcharades-mems
+https://mca-fest-v1.onrender.com/admin/get-photography-mems
+https://mca-fest-v1.onrender.com/admin/get-productlaunch-mems
+https://mca-fest-v1.onrender.com/admin/get-quiz-mems
+https://mca-fest-v1.onrender.com/admin/get-debate-mems
+https://mca-fest-v1.onrender.com/admin/get-gaming-mems
+https://mca-fest-v1.onrender.com/admin/get-treasure-mems
+https://mca-fest-v1.onrender.com/admin/get-dance-mems
+
+*/
