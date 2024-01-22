@@ -31,7 +31,12 @@ const getAllTeams = async (req, res) => {
 const getCodingMems = async (req, res) => {
 
   const codingDataUG = await Team.aggregate([
-    { $match: { "events.coding.name": { $ne: "N/A" }, "events.coding.phone": { $ne: "N/A" } } },
+    { 
+      $match: {
+        "events.coding.name": { $nin: ["", "N/A"] },
+        "events.coding.phone": { $nin: ["", "N/A"] }
+      }
+    },
     { $unwind: "$events.coding" },
     {
       $project: {
@@ -52,7 +57,12 @@ const getCodingMems = async (req, res) => {
   ]);
 
   const codingDataPG = await Team.aggregate([
-    { $match: { "events.coding.name": { $ne: "N/A" }, "events.coding.phone": { $ne: "N/A" } } },
+    { 
+      $match: {
+        "events.coding.name": { $nin: ["", "N/A"] },
+        "events.coding.phone": { $nin: ["", "N/A"] }
+      }
+    },
     { $unwind: "$events.coding" },
     {
       $project: {
@@ -134,7 +144,12 @@ const getCodingMems = async (req, res) => {
 
 const getWebDesigningMems = async (req, res) => {
   const webDataUG = await Team.aggregate([
-    { $match: { "events.web.name": { $ne: "N/A" }, "events.web.phone": { $ne: "N/A" } } },
+    { 
+      $match: {
+        "events.web.name": { $nin: ["", "N/A"] },
+        "events.web.phone": { $nin: ["", "N/A"] }
+      }
+    },
     { $unwind: "$events.web" },
     {
       $project: {
@@ -155,7 +170,12 @@ const getWebDesigningMems = async (req, res) => {
   ]);
 
   const webDataPG = await Team.aggregate([
-    { $match: { "events.web.name": { $ne: "N/A" }, "events.web.phone": { $ne: "N/A" } } },
+    { 
+      $match: {
+        "events.web.name": { $nin: ["", "N/A"] },
+        "events.web.phone": { $nin: ["", "N/A"] }
+      }
+    },
     { $unwind: "$events.web" },
     {
       $project: {
@@ -234,7 +254,12 @@ const getWebDesigningMems = async (req, res) => {
 
 const getItManagerMems = async (req, res) => {
   const itManagerData = await Team.aggregate([
-    { $match: { "events.itManager.name": { $ne: "N/A" }, "events.itManager.phone": { $ne: "N/A" } } },
+    { 
+    $match: {
+      "events.itManager.name": { $nin: ["", "N/A"] },
+      "events.itManager.phone": { $nin: ["", "N/A"] }
+    }
+  },
     { $unwind: "$events.itManager" },
     {
       $project: {
@@ -244,10 +269,54 @@ const getItManagerMems = async (req, res) => {
         phone: "$events.itManager.phone"
       },
     },
+  ]);
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // Data
+    const page = await browser.newPage();
+    const html = generateHtmlFor1(itManagerData, "PG", "IT Manager");
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
+
+    
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=it-manager-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
+    // Close the browser
+    await browser.close();
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+
+};
+
+const getDesigningMems = async (req, res) => {
+  const designingData = await Team.aggregate([
+    { 
+      $match: {
+        "events.designing.name": { $nin: ["", "N/A"] },
+        "events.designing.phone": { $nin: ["", "N/A"] }
+      }
+    },
+    { $unwind: "$events.designing" },
     {
-      $group: {
-        _id: "$teamName",
-        members: { $push: { name: "$name", phone: "$phone" } },
+      $project: {
+        _id: 0,
+        teamName: "$teamName",
+        name: "$events.designing.name",
+        phone: "$events.designing.phone"
       },
     },
   ]);
@@ -255,21 +324,235 @@ const getItManagerMems = async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
     });
 
     // Data
     const page = await browser.newPage();
-    const html = generateHtml(itManagerData, "PG", "IT Manager");
+    const html = generateHtmlFor1(designingData, "PG", "Designing");
+    page.setDefaultNavigationTimeout(0);
     await page.setContent(html);
     const pdfBuffer = await page.pdf({ format: "A4" });
 
+    
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=designing-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
+    // Close the browser
+    await browser.close();
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+
+};
+
+const getPhotographyMems = async (req, res) => {
+  const photographyData = await Team.aggregate([
+    { 
+      $match: {
+        "events.photography.name": { $nin: ["", "N/A"] },
+        "events.photography.phone": { $nin: ["", "N/A"] }
+      }
+    },
+    { $unwind: "$events.photography" },
+    {
+      $project: {
+        _id: 0,
+        teamName: "$teamName",
+        name: "$events.photography.name",
+        phone: "$events.photography.phone"
+      },
+    },
+  ]);
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // Data
+    const page = await browser.newPage();
+    const html = generateHtmlFor1(photographyData, "UG/PG", "Photography");
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
+
+    
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=photography-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
+    // Close the browser
+    await browser.close();
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+
+};
+
+const getProductLaunchMems = async (req, res) => {
+  const productLaunchData = await Team.aggregate([
+    { 
+      $match: {
+        "events.productLaunch.name": { $nin: ["", "N/A"] },
+        "events.productLaunch.phone": { $nin: ["", "N/A"] }
+      }
+    },
+    { $unwind: "$events.productLaunch" },
+    {
+      $project: {
+        _id: 0,
+        teamName: "$teamName",
+        name: "$events.productLaunch.name",
+        phone: "$events.productLaunch.phone"
+      },
+    },
+  ]);
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // Data
+    const page = await browser.newPage();
+    const html = generateHtmlFor1(productLaunchData, "UG/PG", "Product Launch");
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
+
+    
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=productLaunch-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
+    // Close the browser
+    await browser.close();
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+
+};
+
+const getDebateMems = async (req, res) => {
+  const debateData = await Team.aggregate([
+    { 
+      $match: {
+        "events.debate.name": { $nin: ["", "N/A"] },
+        "events.debate.phone": { $nin: ["", "N/A"] }
+      }
+    },
+    { $unwind: "$events.debate" },
+    {
+      $project: {
+        _id: 0,
+        teamName: "$teamName",
+        name: "$events.debate.name",
+        phone: "$events.debate.phone"
+      },
+    },
+  ]);
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // Data
+    const page = await browser.newPage();
+    const html = generateHtmlFor1(debateData, "UG/PG", "Debate");
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
+
+    
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=debate-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
+    // Close the browser
+    await browser.close();
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+
+};
+
+const getDumbCharadesMems = async (req, res) => {
+
+  const dumbCharadesData = await Team.aggregate([
+    {
+        $match: {
+            "events.dumbCharades.name": { $nin: ["", "N/A"] },
+            "events.dumbCharades.phone": { $nin: ["", "N/A"] }
+        }
+    },
+    { $unwind: "$events.dumbCharades" },
+    {
+        $project: {
+            _id: 0,
+            teamName: "$teamName",
+            name: "$events.dumbCharades.name",
+            phone: "$events.dumbCharades.phone",
+        },
+    },
+    {
+        $group: {
+            _id: "$teamName",
+            members: { $push: { name: "$name", phone: "$phone" } },
+        },
+    },
+]);
+  
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // UG Data
+
+    const page = await browser.newPage();
+    const html = generateHtml(dumbCharadesData, "UG", "Dumb Charades");
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=dumb-charades-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
 
     // Close the browser
     await browser.close();
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition","inline; filename=it-manager-participants.pdf");
-    res.write(pdfBuffer);
-    res.end();
 
   } catch (error) {
     console.error(error);
@@ -278,23 +561,264 @@ const getItManagerMems = async (req, res) => {
 
 };
 
-const getDesigningMems = async (req, res) => {};
+const getQuizMems = async (req, res) => {
 
-const getDumbCharadesMems = async (req, res) => {};
+  const quizData = await Team.aggregate([
+    {
+        $match: {
+            "events.quiz.name": { $nin: ["", "N/A"] },
+            "events.quiz.phone": { $nin: ["", "N/A"] }
+        }
+    },
+    { $unwind: "$events.quiz" },
+    {
+        $project: {
+            _id: 0,
+            teamName: "$teamName",
+            name: "$events.quiz.name",
+            phone: "$events.quiz.phone",
+        },
+    },
+    {
+        $group: {
+            _id: "$teamName",
+            members: { $push: { name: "$name", phone: "$phone" } },
+        },
+    },
+]);
+  
 
-const getPhotographyMems = async (req, res) => {};
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
 
-const getProductLaunchMems = async (req, res) => {};
+    // UG Data
 
-const getQuizMems = async (req, res) => {};
+    const page = await browser.newPage();
+    const html = generateHtml(quizData, "UG/PG", "Quiz");
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
 
-const getDebateMems = async (req, res) => {};
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=quiz-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
 
-const getDanceMems = async (req, res) => {};
+    // Close the browser
+    await browser.close();
 
-const getGamingMems = async (req, res) => {};
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
 
-const getTreasureMems = async (req, res) => {};
+};
+
+const getGamingMems = async (req, res) => {
+
+  const gamingData = await Team.aggregate([
+    {
+        $match: {
+            "events.gaming.name": { $nin: ["", "N/A"] },
+            "events.gaming.phone": { $nin: ["", "N/A"] }
+        }
+    },
+    { $unwind: "$events.gaming" },
+    {
+        $project: {
+            _id: 0,
+            teamName: "$teamName",
+            name: "$events.gaming.name",
+            phone: "$events.gaming.phone",
+        },
+    },
+    {
+        $group: {
+            _id: "$teamName",
+            members: { $push: { name: "$name", phone: "$phone" } },
+        },
+    },
+]);
+  
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // UG Data
+
+    const page = await browser.newPage();
+    const html = generateHtml(gamingData, "UG/PG", "Gaming");
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=gaming-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
+
+    // Close the browser
+    await browser.close();
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+
+};
+
+const getTreasureMems = async (req, res) => {
+
+  const treasureData = await Team.aggregate([
+    {
+        $match: {
+            "events.treasure.name": { $nin: ["", "N/A"] },
+            "events.treasure.phone": { $nin: ["", "N/A"] }
+        }
+    },
+    { $unwind: "$events.treasure" },
+    {
+        $project: {
+            _id: 0,
+            teamName: "$teamName",
+            name: "$events.treasure.name",
+            phone: "$events.treasure.phone",
+        },
+    },
+    {
+        $group: {
+            _id: "$teamName",
+            members: { $push: { name: "$name", phone: "$phone" } },
+        },
+    },
+]);
+  
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // UG Data
+
+    const page = await browser.newPage();
+    const html = generateHtml(treasureData, "UG/PG", "Tressure Hunt");
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=gaming-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
+
+    // Close the browser
+    await browser.close();
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+
+};
+
+const getDanceMems = async (req, res) => {
+
+  const danceData = await Team.aggregate([
+    { $unwind: "$events.dance" },
+    {
+      $project: {
+        _id: 0,
+        teamName: "$teamName",
+        name: "$events.dance.name",
+        phone: "$events.dance.phone"
+      }
+    },
+    {
+      $group: {
+        _id: "$teamName",
+        members: { $push: { name: "$name", phone: "$phone" } }
+      }
+    },
+    {
+      $addFields: {
+        members: {
+          $slice: ["$members", 0, { $min: [{ $size: "$members" }, 7] }]
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        members: {
+          $filter: {
+            input: "$members",
+            as: "member",
+            cond: { $ne: ["$$member.name", ""] }
+          }
+        }
+      }
+    },
+    {
+      $match: {
+        "members.phone": { $nin: ["", "N/A"] },
+        "members.name": { $nin: ["", "N/A"] }
+      }
+    },
+  ]);
+
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // Data
+
+    const page = await browser.newPage();
+    const html = generateHtmlForDance(danceData);
+    page.setDefaultNavigationTimeout(0);
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({ format: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=dance-participants.pdf");
+    res.write(pdfBuffer);
+    res.end();
+
+    // res.send(danceData);
+
+    // Close the browser
+    await browser.close();
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+
+};
+
+
 
 function generateHtml(data, category, event) {
   return `
@@ -349,6 +873,111 @@ function generateHtml(data, category, event) {
     </html>
   `;
 }
+
+function generateHtmlFor1(data, category, event) {
+  return `
+    <html>
+      <head>
+        <title>Coding Participants - ${category}</title>
+        <style>
+          section {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          th, td {
+            padding: 0.5rem 1.5rem;
+          }
+        </style>
+      </head>
+      <body>
+        <section>
+          <h1 style="text-align:center">${event}</h1>
+          <h2>${category}</h2>
+          <table border=1>
+            <thead>
+              <tr>
+                <th>Team Name</th>
+                <th>Participants</th>
+                <th>Contact Number</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data
+                .map(
+                  (team) => `
+                    <tr>
+                      <td>${team.teamName}</td>
+                      <td>${team.name}</td>
+                      <td>${team.phone}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </section>
+      </body>
+    </html>
+  `;
+}
+
+function generateHtmlForDance(data) {
+  return `
+    <html>
+      <head>
+        <title>Dance Participants </title>
+        <style>
+          section {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          th, td {
+            padding: 0.5rem 1.5rem;
+          }
+        </style>
+      </head>
+      <body>
+        <section>
+          <h1 style="text-align:center">Dance</h1>
+          <h2>UG/PG</h2>
+          <table border=1>
+            <thead>
+              <tr>
+                <th>Team Name</th>
+                <th>Participants</th>
+                <th>Contact Number</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(
+                (team) => `
+                  <tr>
+                    <td rowspan="${team.members.length}">${team._id}</td>
+                    ${team.members
+                      .map(
+                        (member) => `
+                          <td>${member.name}</td>
+                          <td>${member.phone}</td>
+                        `
+                      )
+                      .join("</tr><tr>")}
+                  </tr>
+                `
+              ).join("")}
+            </tbody>
+          </table>
+        </section>
+      </body>
+    </html>
+  `;
+}
+
 
 module.exports = { 
   adminRoute, 

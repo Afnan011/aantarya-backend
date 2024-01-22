@@ -40,11 +40,11 @@ router.get('/get-quiz-mems', getQuizMems)
 
 router.get('/get-debate-mems', getDebateMems)
 
-router.get('/get-dance-mems', getDanceMems)
-
 router.get('/get-gaming-mems', getGamingMems)
 
 router.get('/get-treasure-mems', getTreasureMems)
+
+router.get('/get-dance-mems', getDanceMems)
 
 module.exports = router;
 
@@ -54,13 +54,13 @@ module.exports = router;
  
 // itManager: [pg], 1
 // designing: [pg], 1
-
-// dumbCharades: [ug], 2
-
 // photography: [combined], 1
 // productLaunch: [combined], 1
 // debate: [combined], 1
+
+// dumbCharades: [ug], 2
+
 // quiz: [combined], 2
-// dance: [combined], 5
 // gaming: [combined], 2
 // treasure: [combined], 2
+// dance: [combined], 5
