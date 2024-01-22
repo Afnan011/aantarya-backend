@@ -1,0 +1,44 @@
+<html>
+<head>
+    <style>
+        section{
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        th, td{
+            padding: 0.2rem 0.4rem;
+        }
+
+    </style>
+</head>
+<body>
+    <section>
+        <h1 style="text-align:center">Coding</h1>
+        <table border=1>
+          <thead>
+            <tr>
+              <th>Team Name</th>
+              <th>Participants</th>
+              <th>Contact Number</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${teamsData.map(team => `
+              <tr>
+                <td rowspan="2">${team._id}</td>
+                <td>${team.members[0].name}</td>
+                <td>${team.members[0].phone}</td>
+              </tr>
+              <tr>
+                <td>${team.members[1].name}</td>
+                <td>${team.members[1].phone}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+    </section>
+</body>
+</html>
