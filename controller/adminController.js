@@ -31,7 +31,7 @@ const getAllTeams = async (req, res) => {
 const getTeamById = async (req, res) => {
   try {
     const teamId = req.params.teamId;
-      const teams = await Team.find(
+      const teams = await Team.findOne(
         {_id: teamId},
         {
           email: 0,
