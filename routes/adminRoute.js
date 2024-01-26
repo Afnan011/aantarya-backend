@@ -14,6 +14,7 @@ const {adminRoute,
     getDanceMems,
     getGamingMems,
     getTreasureMems,
+    getTeamById,
     updateTeamStatus
 } = require('../controller/adminController')
 
@@ -22,6 +23,8 @@ router.get('/', adminRoute);
 
 
 router.get('/get-ids', getAllTeams);
+
+router.get('/get-ids/:teamId', getTeamById);
 
 router.get('/get-coding-mems', getCodingMems)
 
@@ -46,6 +49,7 @@ router.get('/get-gaming-mems', getGamingMems)
 router.get('/get-treasure-mems', getTreasureMems)
 
 router.get('/get-dance-mems', getDanceMems)
+
 
 router.put('/update-team-status/:teamId', updateTeamStatus);
 
