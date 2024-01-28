@@ -51,7 +51,8 @@ const getTeamById = async (req, res) => {
   };
 
 
-const getCodingMems = async (req, res) => {
+
+  const getCodingMems = async (req, res) => {
 
   const codingDataUG = await Team.aggregate([
     { 
@@ -1008,17 +1009,15 @@ const updateTeamStatus = async(req, res) => {
     const status = req.body.paymentStatus.verificationStatus;
     const team = await Team.findById(teamId);
 
+    
+    if (!team) {
+      return res.status(404).json({ message: `cannot find Team with the ID ${teamId}` });
+    }
+    
     const updateTeam = await Team.updateOne(
       {_id: teamId},
       { $set: { "paymentStatus.verificationStatus": status } }
       );
-
-    if (!team) {
-      return res
-        .status(404)
-        .json({ message: `cannot find Team with the ID ${teamId}` });
-    }
-
 
     if(team.paymentStatus.verificationStatus) {
       return res.status(400).json({ message: "Payment already verified" });
