@@ -22,7 +22,6 @@ let availableTamNamesList = [
   "Firewall",
   "Cache",
   "Drone",
-  "Satellite",
   "Quantum",
   "Protocol",
   "Disrupt",
@@ -31,7 +30,7 @@ let availableTamNamesList = [
   "Control",
   "Function",
   "Infinity",
-  "Syntaxify",
+  "Syntax",
   "Logics",
   "Bits",
   "Cloud",
@@ -41,8 +40,34 @@ let availableTamNamesList = [
   "Virtual",
   "Mesh",
   "Stack",
-  "Loopers",
-  "Cache"
+  "Loop",
+  "Commit",
+  "Repo",
+  "Duplex",
+  "Agile",
+  "Proxy",
+  "Abstract",
+  "Sort",
+  "Const",
+  "Pixel",
+  "Lifo",
+  "Debug",
+  "Numpy",
+  "Grid",
+  "Scroll",
+  "Justify",
+  "Dart",
+  "Icons",
+  "Upscale",
+  "Flask",
+  "Bool",
+  "Auth",
+  "Script",
+  "Shell",
+  "Domain",
+  "Token",
+  "Query",
+  "Crons"
 ];
 
 let assignedTeamNamesList = [];
@@ -51,7 +76,8 @@ let assignedTeamNamesList = [];
 const getTeamName = () => {
   if (availableTamNamesList.length === 0) {
     console.error("No more unique team names available.");
-    return 'guest';
+    let num = Math.floor(Math.random() * 1000);
+    return `guest${num}`;
   }
 
   let randomIndex = Math.floor(Math.random() * availableTamNamesList.length);
