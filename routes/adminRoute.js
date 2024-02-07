@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const {verifyAdmin} = require('../middleware/validation')
 const {
     adminRoute, 
     getAllTeams, 
@@ -20,39 +21,39 @@ const {
 } = require('../controller/adminController')
 
 
-router.get('/', adminRoute);
+router.get('/',verifyAdmin, adminRoute);
 
 
-router.get('/get-ids', getAllTeams);
+router.get('/get-ids',verifyAdmin, getAllTeams);
 
-router.get('/get-ids/:teamId', getTeamById);
+router.get('/get-ids/:teamId',verifyAdmin, getTeamById);
 
-router.get('/get-coding-mems', getCodingMems)
+router.get('/get-coding-mems',verifyAdmin, getCodingMems)
 
-router.get('/get-web-mems', getWebDesigningMems)
+router.get('/get-web-mems', verifyAdmin, getWebDesigningMems)
 
-router.get('/get-itmanger-mems', getItManagerMems)
+router.get('/get-itmanger-mems', verifyAdmin, getItManagerMems)
 
-router.get('/get-designing-mems', getDesigningMems)
+router.get('/get-designing-mems', verifyAdmin, getDesigningMems)
 
-router.get('/get-dumbcharades-mems', getDumbCharadesMems)
+router.get('/get-dumbcharades-mems', verifyAdmin, getDumbCharadesMems)
 
-router.get('/get-photography-mems', getPhotographyMems)
+router.get('/get-photography-mems', verifyAdmin, getPhotographyMems)
 
-router.get('/get-productlaunch-mems', getProductLaunchMems)
+router.get('/get-productlaunch-mems', verifyAdmin, getProductLaunchMems)
 
-router.get('/get-quiz-mems', getQuizMems)
+router.get('/get-quiz-mems', verifyAdmin, getQuizMems)
 
-router.get('/get-debate-mems', getDebateMems)
+router.get('/get-debate-mems', verifyAdmin, getDebateMems)
 
-router.get('/get-gaming-mems', getGamingMems)
+router.get('/get-gaming-mems', verifyAdmin, getGamingMems)
 
-router.get('/get-treasure-mems', getTreasureMems)
+router.get('/get-treasure-mems', verifyAdmin, getTreasureMems)
 
-router.get('/get-dance-mems', getDanceMems)
+router.get('/get-dance-mems', verifyAdmin, getDanceMems)
 
 
-router.put('/update-team-status/:teamId', updateTeamStatus);
+router.put('/update-team-status/:teamId', verifyAdmin, updateTeamStatus);
 
 
 module.exports = router;

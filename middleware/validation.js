@@ -54,5 +54,27 @@ const verifyToken = (req, res, next) => {
 }
 
 
+const verifyAdmin = (req, res, next) => {
+    const token = req.header("auth-token")
+    
+    if(!token){
+        return res.status(401).json({error:"access denied"})
+    }
 
-module.exports = {registerValidation, loginValidation, verifyToken}
+    try{
+        const adminPass = 'IDontKnowThePassword'
+        if(token === adminPass){
+            next()
+        }
+        else{
+            res.status(400).json({error:"token is not valid"})
+        }
+    }catch(err){
+        res.status(400).json({error:"token is not valid"})
+    }
+
+}
+
+
+
+module.exports = {registerValidation, loginValidation, verifyToken, verifyAdmin}
