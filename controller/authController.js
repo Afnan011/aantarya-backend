@@ -2,6 +2,7 @@ const User = require("../model/user");
 const Team = require("../model/team");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const emailValidator = require('deep-email-validator');
 const {sendConfirmationEmail } = require("../email/registrationConfirmation");
 
 const {registerValidation,loginValidation} = require("../middleware/validation");
@@ -11,7 +12,6 @@ let availableTamNamesList = [
   "Heuristic",
   "Parse",
   "Compile",
-  "Recursion",
   "Optimizer",
   "Cipher",
   "Vector",
@@ -38,7 +38,6 @@ let availableTamNamesList = [
   "Render",
   "Interpret",
   "Virtual",
-  "Mesh",
   "Stack",
   "Loop",
   "Commit",
@@ -72,6 +71,9 @@ let availableTamNamesList = [
 
 let assignedTeamNamesList = [];
 
+const isEmailValid = async(email) => {
+  return emailValidator.validate(email)
+}
 
 const getTeamName = () => {
   if (availableTamNamesList.length === 0) {
@@ -97,21 +99,27 @@ const signUpUser = async (req, res) => {
   const { error } = registerValidation(req.body);
 
   if (error) {
-    return res.status(400).json({ error: "user validation failed" });
+    return res.status(400).json({ error: "User validation failed!" });
   }
 
   //check user exists
   const emailExist = await User.findOne({ email: req.body.email });
 
   if (emailExist) {
-    return res.status(400).json({ error: "User already exist" });
+    return res.status(400).json({ error: "User already exist!" });
+  }
+
+  // check if email is valid
+  const { valid, reason } = await isEmailValid(req.body.email);
+  if(!valid){
+    return res.status(400).json({ error: "Invalid email!", message });
   }
 
   // check the college already exists
   const collegeName = await Team.findOne({ $and: [{ collegeName: req.body.name }, { isUG: req.body.isUG }]});
 
   if(collegeName){
-    return res.status(400).json({ error: "College already registered" });
+    return res.status(400).json({ error: "College already registered!" });
   }
 
   //encrypt password
@@ -139,6 +147,7 @@ const signUpUser = async (req, res) => {
     console.log(savedTeam);
 
     sendConfirmationEmail(newTeam.email, newTeam.collegeName, newTeam.isUG);
+    sendConfirmationEmail('mcavcet0@gmail.com', newTeam.collegeName, newTeam.isUG); 
 
     res.json({ error: null, data: savedUser._id, isUG: savedUser.isUG });
   } catch (err) {

@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
+const {verifyToken} = require('../middleware/validation')
 const {getTeams, getTeamById, updateTeamById, clearEvents, verifyUpload, sendEmail1} = require("../controller/teamController");
 
-router.get('/', getTeams);
+router.get('/', verifyToken, getTeams);
 
 router.get("/:teamId", getTeamById);
 
