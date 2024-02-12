@@ -110,10 +110,10 @@ const signUpUser = async (req, res) => {
   }
 
   // check if email is valid
-  const { valid, reason } = await isEmailValid(req.body.email);
-  if(!valid){
-    return res.status(400).json({ error: "Invalid email!"});
-  }
+  // const { valid, reason } = await isEmailValid(req.body.email);
+  // if(!valid){
+  //   return res.status(400).json({ error: "Invalid email!"});
+  // }
 
   // check the college already exists
   const collegeName = await Team.findOne({ $and: [{ collegeName: req.body.name }, { isUG: req.body.isUG }]});
