@@ -765,47 +765,68 @@ const getTreasureMems = async (req, res) => {
 const getDanceMems = async (req, res) => {
 
   const danceData = await Team.aggregate([
-    { $unwind: "$events.dance" },
+    { "$unwind": "$events.dance" },
     {
-      $project: {
-        _id: 0,
-        teamName: "$teamName",
-        name: "$events.dance.name",
-        phone: "$events.dance.phone"
+      "$project": {
+        "_id": 0,
+        "teamName": "$teamName",
+        "name": "$events.dance.name",
+        "phone": "$events.dance.phone"
       }
     },
     {
-      $group: {
-        _id: "$teamName",
-        members: { $push: { name: "$name", phone: "$phone" } }
-      }
-    },
-    {
-      $addFields: {
-        members: {
-          $slice: ["$members", 0, { $min: [{ $size: "$members" }, 7] }]
-        }
-      }
-    },
-    {
-      $project: {
-        _id: 1,
-        members: {
-          $filter: {
-            input: "$members",
-            as: "member",
-            cond: { $ne: ["$$member.name", ""] }
+      "$group": {
+        "_id": "$teamName",
+        "members": {
+          "$push": {
+            "name": "$name",
+            "phone": "$phone"
           }
         }
       }
     },
     {
-      $match: {
-        "members.phone": { $nin: ["", "N/A"] },
-        "members.name": { $nin: ["", "N/A"] }
+      "$addFields": {
+        "memberCount": {
+          "$size": {
+            "$filter": {
+              "input": "$members",
+              "as": "member",
+              "cond": {
+                "$and": [
+                  { "$ne": ["$$member.name", "N/A"] },
+                  { "$ne": ["$$member.name", ""] }
+                ]
+              }
+            }
+          }
+        }
       }
     },
-  ]);
+    {
+      "$match": {
+        "memberCount": { "$gte": 5 }
+      }
+    },
+    {
+      "$project": {
+        "_id": 1,
+        "members": {
+          "$filter": {
+            "input": "$members",
+            "as": "member",
+            "cond": {
+              "$and": [
+                { "$ne": ["$$member.name", "N/A"] },
+                { "$ne": ["$$member.name", ""] }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+  );
 
 
   try {
@@ -818,7 +839,6 @@ const getDanceMems = async (req, res) => {
     });
 
     // Data
-
     const page = await browser.newPage();
     const html = generateHtmlForDance(danceData);
     page.setDefaultNavigationTimeout(0);
@@ -830,6 +850,7 @@ const getDanceMems = async (req, res) => {
     res.write(pdfBuffer);
     res.end();
 
+
     // res.send(danceData);
 
     // Close the browser
@@ -840,6 +861,96 @@ const getDanceMems = async (req, res) => {
     res.status(500).send("Error generating PDF");
   }
 
+};
+
+
+const getTeamByCollege = async (req, res) => {
+ 
+  const ugTeams = await Team.find(
+    {isUG: true},
+    {
+      email: 0,
+      events: 0,
+      accommodation: 0,
+      paymentStatus: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      __v: 0,
+    }
+  );
+
+  const pgTeams = await Team.find(
+    {isUG: false},
+    {
+      email: 0,
+      events: 0,
+      accommodation: 0,
+      paymentStatus: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      __v: 0,
+    }
+  );
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // UG Data
+
+    const ugPage = await browser.newPage();
+    const ugHtml = generateHtmlForTeams(ugTeams, "UG",);
+    ugPage.setDefaultNavigationTimeout(0);
+    await ugPage.setContent(ugHtml);
+    const ugPdfBuffer = await ugPage.pdf({ format: "A4" });
+
+    // PG Data
+    const pgPage = await browser.newPage();
+    const pgHtml = generateHtmlForTeams(pgTeams, "PG");
+    pgPage.setDefaultNavigationTimeout(0);
+    await pgPage.setContent(pgHtml);
+    const pgPdfBuffer = await pgPage.pdf({ format: "A4" });
+
+    
+    
+    // Combine the two pdfs
+    // Load PDF documents
+    const ugPdfDoc = await PDFDocument.load(ugPdfBuffer);
+    const pgPdfDoc = await PDFDocument.load(pgPdfBuffer);
+
+    // Create a new PDF document
+    const combinedPdfDoc = await PDFDocument.create();
+
+    // Copy pages from UG and PG PDFs to the new document
+    const ugPdfPages = await combinedPdfDoc.copyPages(ugPdfDoc, [0]);
+    const pgPdfPages = await combinedPdfDoc.copyPages(pgPdfDoc, [0]);
+
+    // Add copied pages to the new document
+    combinedPdfDoc.addPage(ugPdfPages[0]);
+    combinedPdfDoc.addPage(pgPdfPages[0]);
+
+    // Save the combined PDF as a buffer
+    const combinedPdfBuffer = await combinedPdfDoc.save();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=coding-participants.pdf");
+    res.write(combinedPdfBuffer);
+    res.end();
+
+    // res.json({ugTeams, pgTeams})
+
+
+    // Close the browser
+    await browser.close();
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
 };
 
 
@@ -954,12 +1065,17 @@ function generateHtmlForDance(data) {
       <head>
         <title>Dance Participants </title>
         <style>
+        *{
+          margin:0;
+          padding:0;
+          box-sizing:border-box;
+        }
           section {
             display: flex;
             justify-content: flex-start;
             align-items: center;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 1rem;
           }
           th, td {
             padding: 0.5rem 1.5rem;
@@ -968,16 +1084,13 @@ function generateHtmlForDance(data) {
       </head>
       <body>
         <section>
-          <h1 style="text-align:center">Dance</h1>
-          <h2>UG/PG</h2>
+          <h1 style="text-align:center">Dance (UG/PG)</h1>
           <table border=1>
-            <thead>
               <tr>
                 <th>Team Name</th>
                 <th>Participants</th>
                 <th>Contact Number</th>
               </tr>
-            </thead>
             <tbody>
               ${data.map(
                 (team) => `
@@ -1001,6 +1114,57 @@ function generateHtmlForDance(data) {
     </html>
   `;
 }
+
+function generateHtmlForTeams(data, category){
+  let counter = 1;
+  return `
+  <html>
+    <head>
+      <title>Coding Participants - ${category}</title>
+      <style>
+        section {
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        th, td {
+          padding: 0.5rem 1.5rem;
+        }
+      </style>
+    </head>
+    <body>
+      <section>
+        <h2>${category} Teams</h2>
+        <table border=1>
+        <tr>
+          <th>S.No</th>
+          <th>Team Name</th>
+          <th>College Name</th>
+        </tr>
+          <tbody>
+            ${data
+              .map(
+                (team) => `
+                  <tr>
+                    <td>${counter++}</td>
+                    <td>${team.teamName}</td>
+                    <td>${team.collegeName}</td>
+                  </tr>
+                `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </section>
+    </body>
+  </html>
+`;
+}
+
+
+
 
 
 const updateTeamStatus = async(req, res) => {
@@ -1053,5 +1217,6 @@ module.exports = {
   getGamingMems,
   getTreasureMems,
   getTeamById,
+  getTeamByCollege,
   updateTeamStatus
 };
