@@ -18,6 +18,7 @@ const {
     getTreasureMems,
     getTeamById,
     getTeamByCollege,
+    getTeamWithoutCollege,
     updateTeamStatus
 } = require('../controller/adminController')
 
@@ -31,7 +32,7 @@ router.get('/get-ids/:teamId',verifyAdmin, getTeamById);
 
 router.get('/get-coding-mems',verifyAdmin, getCodingMems)
 
-router.get('/get-web-mems', verifyAdmin, getWebDesigningMems)
+router.get('/get-web-mems', getWebDesigningMems)
 
 router.get('/get-itmanger-mems', verifyAdmin, getItManagerMems)
 
@@ -53,7 +54,9 @@ router.get('/get-treasure-mems', verifyAdmin, getTreasureMems)
 
 router.get('/get-dance-mems', verifyAdmin, getDanceMems)
 
-router.get('/get-team-by-college/', getTeamByCollege)
+router.get('/get-team-by-college/', verifyAdmin, getTeamByCollege)
+
+router.get('/get-team-without-college/', verifyAdmin, getTeamWithoutCollege)
 
 router.put('/update-team-status/:teamId', verifyAdmin, updateTeamStatus);
 

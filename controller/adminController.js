@@ -864,6 +864,7 @@ const getDanceMems = async (req, res) => {
 };
 
 
+// with college name
 const getTeamByCollege = async (req, res) => {
  
   const ugTeams = await Team.find(
@@ -954,8 +955,102 @@ const getTeamByCollege = async (req, res) => {
 };
 
 
+// without college name
+const getTeamWithoutCollege = async (req, res) => {
+ 
+  const ugTeams = await Team.find(
+    {isUG: true},
+    {
+      collegeName: 0,
+      email: 0,
+      events: 0,
+      accommodation: 0,
+      paymentStatus: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      __v: 0,
+    }
+  );
+
+  const pgTeams = await Team.find(
+    {isUG: false},
+    {
+      collegeName: 0,
+      email: 0,
+      events: 0,
+      accommodation: 0,
+      paymentStatus: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      __v: 0,
+    }
+  );
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+      ],
+      executablePath:  process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath()
+    });
+
+    // UG Data
+
+    const ugPage = await browser.newPage();
+    const ugHtml = generateHtmlForTeamsWithoutCollege(ugTeams, "UG",);
+    ugPage.setDefaultNavigationTimeout(0);
+    await ugPage.setContent(ugHtml);
+    const ugPdfBuffer = await ugPage.pdf({ format: "A4" });
+
+    // PG Data
+    const pgPage = await browser.newPage();
+    const pgHtml = generateHtmlForTeamsWithoutCollege(pgTeams, "PG");
+    pgPage.setDefaultNavigationTimeout(0);
+    await pgPage.setContent(pgHtml);
+    const pgPdfBuffer = await pgPage.pdf({ format: "A4" });
+
+    
+    
+    // Combine the two pdfs
+    // Load PDF documents
+    const ugPdfDoc = await PDFDocument.load(ugPdfBuffer);
+    const pgPdfDoc = await PDFDocument.load(pgPdfBuffer);
+
+    // Create a new PDF document
+    const combinedPdfDoc = await PDFDocument.create();
+
+    // Copy pages from UG and PG PDFs to the new document
+    const ugPdfPages = await combinedPdfDoc.copyPages(ugPdfDoc, [0]);
+    const pgPdfPages = await combinedPdfDoc.copyPages(pgPdfDoc, [0]);
+
+    // Add copied pages to the new document
+    combinedPdfDoc.addPage(ugPdfPages[0]);
+    combinedPdfDoc.addPage(pgPdfPages[0]);
+
+    // Save the combined PDF as a buffer
+    const combinedPdfBuffer = await combinedPdfDoc.save();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition","inline; filename=coding-participants.pdf");
+    res.write(combinedPdfBuffer);
+    res.end();
+
+    // res.json({ugTeams, pgTeams})
+
+
+    // Close the browser
+    await browser.close();
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
+};
+
+
 
 function generateHtml(data, category, event) {
+  let counter = 1;
   return `
     <html>
       <head>
@@ -980,6 +1075,7 @@ function generateHtml(data, category, event) {
           <table border=1>
             <thead>
               <tr>
+                <th>S.No</th>
                 <th>Team Name</th>
                 <th>Participants</th>
                 <th>Contact Number</th>
@@ -990,7 +1086,8 @@ function generateHtml(data, category, event) {
                 .map(
                   (team) => `
                     <tr>
-                      <td rowspan="2">${team._id}</td>
+                    <td rowspan="2">${counter++}</td>
+                    <td rowspan="2">${team._id}</td>
                       <td>${team.members[0].name}</td>
                       <td>${team.members[0].phone}</td>
                     </tr>
@@ -1010,6 +1107,7 @@ function generateHtml(data, category, event) {
 }
 
 function generateHtmlFor1(data, category, event) {
+  let counter=1;
   return `
     <html>
       <head>
@@ -1034,6 +1132,7 @@ function generateHtmlFor1(data, category, event) {
           <table border=1>
             <thead>
               <tr>
+                <th>S.No</th>
                 <th>Team Name</th>
                 <th>Participants</th>
                 <th>Contact Number</th>
@@ -1044,6 +1143,7 @@ function generateHtmlFor1(data, category, event) {
                 .map(
                   (team) => `
                     <tr>
+                      <td>${counter++}</td>
                       <td>${team.teamName}</td>
                       <td>${team.name}</td>
                       <td>${team.phone}</td>
@@ -1060,6 +1160,7 @@ function generateHtmlFor1(data, category, event) {
 }
 
 function generateHtmlForDance(data) {
+  let counter = 1;
   return `
     <html>
       <head>
@@ -1087,6 +1188,7 @@ function generateHtmlForDance(data) {
           <h1 style="text-align:center">Dance (UG/PG)</h1>
           <table border=1>
               <tr>
+               <th>S.No</th>
                 <th>Team Name</th>
                 <th>Participants</th>
                 <th>Contact Number</th>
@@ -1095,6 +1197,7 @@ function generateHtmlForDance(data) {
               ${data.map(
                 (team) => `
                   <tr>
+                    <td rowspan="${team.members.length}">${counter++}</td>
                     <td rowspan="${team.members.length}">${team._id}</td>
                     ${team.members
                       .map(
@@ -1163,8 +1266,51 @@ function generateHtmlForTeams(data, category){
 `;
 }
 
-
-
+function generateHtmlForTeamsWithoutCollege(data, category){
+  let counter = 1;
+  return `
+  <html>
+    <head>
+      <title>Coding Participants - ${category}</title>
+      <style>
+        section {
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        th, td {
+          padding: 0.5rem 1.5rem;
+        }
+      </style>
+    </head>
+    <body>
+      <section>
+        <h2>${category} Teams</h2>
+        <table border=1>
+        <tr>
+          <th>S.No</th>
+          <th>Team Name</th>
+        </tr>
+          <tbody>
+            ${data
+              .map(
+                (team) => `
+                  <tr>
+                    <td>${counter++}</td>
+                    <td>${team.teamName}</td>
+                  </tr>
+                `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </section>
+    </body>
+  </html>
+`;
+}
 
 
 const updateTeamStatus = async(req, res) => {
@@ -1218,5 +1364,6 @@ module.exports = {
   getTreasureMems,
   getTeamById,
   getTeamByCollege,
+  getTeamWithoutCollege,
   updateTeamStatus
 };
