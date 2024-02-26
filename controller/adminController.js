@@ -938,7 +938,7 @@ const getTeamByCollege = async (req, res) => {
     // Save the combined PDF as a buffer
     const combinedPdfBuffer = await combinedPdfDoc.save();
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition","inline; filename=coding-participants.pdf");
+    res.setHeader("Content-Disposition","inline; filename=team-names-with-college-name.pdf");
     res.write(combinedPdfBuffer);
     res.end();
 
@@ -1031,7 +1031,7 @@ const getTeamWithoutCollege = async (req, res) => {
     // Save the combined PDF as a buffer
     const combinedPdfBuffer = await combinedPdfDoc.save();
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition","inline; filename=coding-participants.pdf");
+    res.setHeader("Content-Disposition","inline; filename=team-name-without-college-name.pdf");
     res.write(combinedPdfBuffer);
     res.end();
 
