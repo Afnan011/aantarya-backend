@@ -8,7 +8,7 @@ const {sendConfirmationEmail } = require("../email/registrationConfirmation");
 const {registerValidation,loginValidation} = require("../middleware/validation");
 // const { getTeamById } = require("./teamController");
 
-const availableTeamNamesList = [
+const availableTamNamesList = [
   "Heuristic",
   "Compile",
   "Vector",
